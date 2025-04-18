@@ -86,8 +86,8 @@ prometheus-stack-deploy:
 	kubectl apply -f k8s-manifests/namespace-monitoring.yaml
 	# projects
 	kubectl apply -f argocd/projects/system-monitoring.yaml
+	# CRDs
+	kubectl apply -f argocd/prometheus-operator-crds.yaml
 	# apps
 	kubectl apply -f argocd/prometheus-stack.yaml
 	kubectl apply -f argocd/prometheus-adapter.yaml
-
-
