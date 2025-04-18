@@ -1,6 +1,7 @@
 # Set environment variables
 export CLUSTER_NAME?=crossplane-demo
 export CILIUM_VERSION?=1.17.3
+export ARGOCD_CHART_VERSION=7.8.26
 
 # kind image list
 export KIND_NODE_IMAGE="kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f"
@@ -42,3 +43,17 @@ cilium-install:
 	   -f kind/kind-values-cilium-service-monitors.yaml \
 	   --namespace kube-system \
 	   --wait
+
+.PHONY: argocd-deploy
+argocd-deploy:
+	helm repo add argo https://argoproj.github.io/argo-helm
+	helm upgrade --install \
+		argocd-single \
+		argo/argo-cd \
+		--namespace argocd \
+		--create-namespace \
+		--version "${ARGOCD_CHART_VERSION}" \
+		-f kind/kind-values-argocd.yaml \
+		-f kind/kind-values-argocd-service-monitors.yaml \
+		--wait
+	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
