@@ -33,14 +33,14 @@ configs:
     # -- Open-Telemetry collector address: (e.g. "otel-collector:4317")
     otlp.address: ''
 
-        ## Server properties
+    ## Server properties
     # -- Run server without TLS
     ## NOTE: This value should be set when you generate params by other means as it changes ports used by ingress template.
     server.insecure: true
     # -- Value for base href in index.html. Used if Argo CD is running behind reverse proxy under subpath different from /
-    server.basehref: /
+    # server.basehref: /
     # -- Used if Argo CD is running behind reverse proxy under subpath different from /
-    server.rootpath: ''
+    # server.rootpath: ''
     # -- Disable Argo CD RBAC for user authentication
     server.disable.auth: true
 dex:
@@ -61,8 +61,9 @@ server:
   #   - --disable-auth
   ingress:
     enabled: true
-    # hosts:
-    #   - argocd.127.0.0.1.nip.io
+    ingressClassName: cilium
+    hosts:
+      - argocd.127.0.0.1.nip.io
 redis:
   metrics:
     enabled: true

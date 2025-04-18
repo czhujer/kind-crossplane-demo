@@ -22,5 +22,6 @@ hubble:
       enabled: true
     ingress:
       enabled: true
+      className: cilium
       hosts:
         - hubble.127.0.0.1.nip.io

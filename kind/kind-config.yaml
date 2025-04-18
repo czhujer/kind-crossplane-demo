@@ -30,6 +30,13 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
+      # cilium ingress-controller
+      - containerPort: 32532
+        hostPort: 32532
+        protocol: TCP
+      - containerPort: 32533
+        hostPort: 32533
+        protocol: TCP
 #  - role: control-plane
 #  - role: control-plane
 #  - role: worker

@@ -2,12 +2,13 @@
 export CLUSTER_NAME?=crossplane-demo
 export CILIUM_VERSION?=1.17.3
 export ARGOCD_CHART_VERSION=7.8.26
+export ROSSPLANE_CHART_VERSION=1.19.1
 
 # kind image list
 export KIND_NODE_IMAGE="kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f"
 
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind kind-install-crds cilium-install
+kind-basic: kind-create kx-kind kind-install-crds cloud-controller cilium-install argocd-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -27,10 +28,23 @@ kind-delete:
 kx-kind:
 	kind export kubeconfig --name $(CLUSTER_NAME)
 
+# .PHONY: metallb-deploy
+# metallb-deploy:
+# 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/namespace.yaml
+# 	kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
+
 .PHONY: kind-install-crds
 kind-install-crds:
 	# fix prometheus-operator's CRDs
 	kubectl apply -f https://raw.githubusercontent.com/prometheus-community/helm-charts/refs/heads/main/charts/kube-prometheus-stack/charts/crds/crds/crd-servicemonitors.yaml
+	# Gateway API (needed for Cilium with enabled gateway-controller)
+	kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
+
+.PHONY: cloud-controller
+cloud-controller:
+	go install sigs.k8s.io/cloud-provider-kind@latest
+	sudo ~/go/bin/cloud-provider-kind &
 
 .PHONY: cilium-install
 cilium-install:
@@ -43,6 +57,9 @@ cilium-install:
 	   -f kind/kind-values-cilium-service-monitors.yaml \
 	   --namespace kube-system \
 	   --wait
+	# for upgrade
+	# kubectl -n kube-system rollout restart deployment/cilium-operator
+	# kubectl -n kube-system rollout restart ds/cilium
 
 .PHONY: argocd-deploy
 argocd-deploy:
@@ -57,3 +74,4 @@ argocd-deploy:
 		-f kind/kind-values-argocd-service-monitors.yaml \
 		--wait
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+

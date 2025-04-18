@@ -29,4 +29,33 @@ ipam:
   mode: kubernetes
 prometheus:
   enabled: true
-
+gatewayAPI:
+  enabled: true
+ingressController:
+  # -- Enable cilium ingress controller
+  # This will automatically set enable-envoy-config as well.
+  enabled: true
+  # -- Set cilium ingress controller to be the default ingress controller
+  # This will let cilium ingress controller route entries without ingress class set
+  default: false
+  # -- Default ingress load balancer mode
+  # Supported values: shared, dedicated
+  # For granular control, use the following annotations on the ingress resource:
+  # "ingress.cilium.io/loadbalancer-mode: dedicated" (or "shared").
+  loadbalancerMode: shared
+  # -- Enforce https for host having matching TLS host in Ingress.
+  # Incoming traffic to http listener will return 308 http error code with respective location in header.
+  enforceHttps: false
+  service:
+    # -- Service name
+    name: cilium-ingress
+    # @schema
+    # type: [null, integer]
+    # @schema
+    # -- Configure a specific nodePort for insecure HTTP traffic on the shared LB service
+    insecureNodePort: 32532
+    # @schema
+    # type: [null, integer]
+    # @schema
+    # -- Configure a specific nodePort for secure HTTPS traffic on the shared LB service
+    secureNodePort: 32533
