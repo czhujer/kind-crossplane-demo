@@ -8,7 +8,7 @@ export ROSSPLANE_CHART_VERSION=1.19.1
 export KIND_NODE_IMAGE="kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f"
 
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind kind-install-crds cloud-controller cilium-install argocd-deploy
+kind-basic: kind-create kx-kind kind-install-crds cloud-controller cilium-install argocd-deploy metrics-server-deploy prometheus-stack-deploy
 
 .PHONY: kind-create
 kind-create:
@@ -74,4 +74,20 @@ argocd-deploy:
 		-f kind/kind-values-argocd-service-monitors.yaml \
 		--wait
 	# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo ""
+
+.PHONY: metrics-server-deploy
+metrics-server-deploy:
+	kubectl apply -f argocd/projects/system-kube.yaml
+	kubectl apply -f argocd/metrics-server.yaml
+
+.PHONY: prometheus-stack-deploy
+prometheus-stack-deploy:
+	# create namespace with annotations for PSS/PSA
+	kubectl apply -f k8s-manifests/namespace-monitoring.yaml
+	# projects
+	kubectl apply -f argocd/projects/system-monitoring.yaml
+	# apps
+	kubectl apply -f argocd/prometheus-stack.yaml
+	kubectl apply -f argocd/prometheus-adapter.yaml
+
 
