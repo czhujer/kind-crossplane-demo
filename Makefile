@@ -2,7 +2,6 @@
 export CLUSTER_NAME?=crossplane-demo
 export CILIUM_VERSION?=1.17.3
 export ARGOCD_CHART_VERSION=7.8.26
-export ROSSPLANE_CHART_VERSION=1.19.1
 
 # kind image list
 export KIND_NODE_IMAGE="kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f"
@@ -44,7 +43,7 @@ kind-install-crds:
 .PHONY: cloud-controller
 cloud-controller:
 	go install sigs.k8s.io/cloud-provider-kind@latest
-	sudo ~/go/bin/cloud-provider-kind &
+	sudo ~/go/bin/cloud-provider-kind
 
 .PHONY: cilium-install
 cilium-install:
@@ -91,3 +90,11 @@ prometheus-stack-deploy:
 	# apps
 	kubectl apply -f argocd/prometheus-stack.yaml
 	kubectl apply -f argocd/prometheus-adapter.yaml
+
+.PHONY: crossplane-deploy
+crossplane-deploy:
+	kubectl apply -f argocd/projects/system-crossplane.yaml
+	kubectl apply -f argocd/crossplane.yaml
+	sleep 20s
+	kubectl apply -f k8s-manifests/crossplane-config-opentofu.yaml
+	kubectl apply -f k8s-manifests/opentofu-workspace.yaml

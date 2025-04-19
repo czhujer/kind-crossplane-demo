@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: crossplane-system
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-crossplane
+  source:
+    chart: crossplane
+    repoURL: https://charts.crossplane.io/stable
+    targetRevision: 1.19.1
+    helm:
+      skipCrds: true
+      values: |
+        metrics:
+          # -- Enable Prometheus path, port and scrape annotations and expose port 8080 for both the Crossplane and RBAC Manager pods.
+          enabled: true
+        provider:
+          # -- A list of Provider packages to install.
+          packages:
+          - xpkg.upbound.io/upbound/provider-opentofu:v0.2.4
+
+        configuration:
+          # -- A list of Configuration packages to install.
+          packages: []
+
+        function:
+          # -- A list of Function packages to install
+          packages: []
