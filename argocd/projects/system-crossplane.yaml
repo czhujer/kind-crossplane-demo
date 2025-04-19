@@ -1,0 +1,15 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: system-crossplane
+  namespace: argocd
+spec:
+  sourceRepos:
+    - 'https://charts.crossplane.io/stable'
+  destinations:
+    - namespace: 'crossplane-system'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

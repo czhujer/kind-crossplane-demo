@@ -1,0 +1,131 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: system-monitoring
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 70.7.0
+    helm:
+      skipCrds: true
+      values: |
+        grafana:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+          adminPassword: admin
+          ingress:
+            enabled: true
+            ingressClassName: cilium
+            hosts:
+              - grafana.127.0.0.1.nip.io
+          sidecar:
+            dashboards:
+              searchNamespace: ALL
+            enableUniqueFilenames: true
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+              - name: 'system'
+                orgId: 1
+                folder: 'System'
+                type: file
+                disableDeletion: false
+                editable: true
+                options:
+                  path: /var/lib/grafana/dashboards/system
+              - name: 'modern-kubernetes-dashboards'
+                orgId: 1
+                folder: 'modern kubernetes dashboards'
+                type: file
+                disableDeletion: false
+                editable: true
+                options:
+                  path: /var/lib/grafana/dashboards/modern-kubernetes-dashboards
+          dashboards:
+            system:
+              ingress:
+                gnetId: 9614
+                revision: 1
+                datasource: Prometheus
+              Node-exporter-full:
+                gnetId: 1860
+                revision: 27
+                datasource: Prometheus  
+              kube-state-metrics-v2:
+                gnetId: 13332
+                revision: 12
+                datasource: Prometheus
+              prometheus-2.0:
+                gnetId: 3662
+                revision: 2
+                datasource: Prometheus
+              promtail-2.4.x:
+                gnetId: 15443
+                revision: 2
+                datasource: Prometheus
+              kubernetes-api-server:
+                gnetId: 12006
+                datasource: Prometheus
+              modern-kubernetes-dashboards:
+                k8s-system-api-server:
+                  url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-api-server.json
+                k8s-system-coredns:
+                  url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-coredns.json
+                k8s-views-global:
+                  url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-global.json
+                k8s-views-namespaces:
+                  url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-namespaces.json
+                k8s-views-nodes:
+                  url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-nodes.json
+                k8s-views-pods:
+                  url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-pods.json  
+        prometheus:
+          enabled: true
+          ingress:
+            enabled: yes
+            ingressClassName: cilium
+            hosts:
+              - prometheus.127.0.0.1.nip.io
+          prometheusSpec:
+            podMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+        #    scrapeInterval: 5s
+        #    scrapeTimeout: 5s
+        #
+        kubeStateMetrics:
+          enabled: true
+        nodeExporter:
+          enabled: true
+        alertmanager:
+          enabled: false
+        kubeApiServer:
+          enabled: true
+        kubelet:
+          enabled: true
+        kubeProxy:
+          enabled: false
+        kubeControllerManager:
+          enabled: true
+        coreDns:
+          enabled: true
+        kubeScheduler:
+          enabled: true
+        kubeEtcd:
+          enabled: false

@@ -1,0 +1,27 @@
+---
+apiVersion: opentofu.upbound.io/v1beta1
+kind: Workspace
+metadata:
+  name: example-inline
+  annotations:
+    # The workspace will be named 'coolbucket'. If you omitted this
+    # annotation it would be derived from metadata.name - i.e. 'example-inline'.
+    crossplane.io/external-name: coolbucket
+spec:
+  forProvider:
+    # For simple cases you can use an inline source to specify the content of
+    # main.tf as opaque, inline HCL.
+    source: Inline
+    module: |
+      // All outputs are written to the connection secret.  Non-sensitive outputs
+      // are stored in the status.atProvider.outputs object.
+      output "random_example" {
+        value       = random_id.example
+      }
+
+      resource "random_id" "example" {
+        byte_length = 4
+      }
+  writeConnectionSecretToRef:
+    namespace: default
+    name: opentofu-workspace-example-inline
