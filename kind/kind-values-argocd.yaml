@@ -68,7 +68,7 @@ server:
   #   - --disable-auth
   ingress:
     enabled: true
-    ingressClassName: cilium
+    # ingressClassName: cilium
     hosts:
       - argocd.127.0.0.1.nip.io
 redis:
@@ -87,4 +87,3 @@ notifications:
   metrics:
     # -- Enables prometheus metrics server
     enabled: true
-

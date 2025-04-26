@@ -7,12 +7,12 @@ export ARGOCD_CHART_VERSION=7.8.26
 export KIND_NODE_IMAGE="kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f"
 
 .PHONY: kind-basic
-kind-basic: kind-create kx-kind kind-install-crds cloud-controller cilium-install argocd-deploy metrics-server-deploy prometheus-stack-deploy
+kind-basic: kind-create kx-kind kind-install-crds cilium-install argocd-deploy metrics-server-deploy prometheus-stack-deploy
 
 .PHONY: kind-create
 kind-create:
 	kind --version
-	kind create cluster --name "$(CLUSTER_NAME)" \
+	KIND_EXPERIMENTAL_PROVIDER=podman kind create cluster --name "$(CLUSTER_NAME)" \
  		--config="kind/kind-config.yaml" \
  		--image="$(KIND_NODE_IMAGE)" \
  		--retain
@@ -39,6 +39,12 @@ kind-install-crds:
 	# Gateway API (needed for Cilium with enabled gateway-controller)
 	kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
+
+.PHONY: install-nginx-ingress
+install-nginx-ingress:
+	kubectl label node/crossplane-demo-control-plane ingress-ready=true
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+	# kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io ingress-nginx-admission
 
 .PHONY: cloud-controller
 cloud-controller:
